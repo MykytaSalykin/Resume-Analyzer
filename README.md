@@ -20,14 +20,14 @@ AI-powered resume analysis system that matches resumes to job descriptions using
 
 ### Docker (Recommended)
 ```bash
-git clone <repo-url>
+git clone https://github.com/MykytaSalykin/Resume-Analyzer.git
 cd rag-app
 docker-compose up --build
 ```
 
 ### Local Development
 ```bash
-git clone <repo-url>
+git clone https://github.com/MykytaSalykin/Resume-Analyzer.git
 cd rag-app
 pip install -r requirements.txt
 uvicorn api:app --reload --port 8000
@@ -63,5 +63,4 @@ pytest tests/ -v
 ```
 
 ## License
-
-MIT License - see [LICENSE](LICENSE) file.
+MIT License 
