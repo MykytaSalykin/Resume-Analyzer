@@ -51,18 +51,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Run Bandit Security Scan
-      uses: securecodewarrior/github-action-add-sarif@v1
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        sarif-file: 'bandit-report.sarif'
+        python-version: '3.11'
         
     - name: Install bandit
       run: |
         pip install bandit[toml]
         
-    - name: Run bandit
+    - name: Run bandit security scan
       run: |
-        bandit -r . -f sarif -o bandit-report.sarif || true
+        bandit -r . -ll || true
 
   docker:
     runs-on: ubuntu-latest

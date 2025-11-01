@@ -841,7 +841,7 @@ def _generate_recommendations(
             recs.append("📈 Build more relevant experience")
         
         if overall < 30:
-            recs.extend(["📋 Improve resume structure", "� Add quantified achievements"])
+            recs.extend(["📋 Improve resume structure", "📊 Add quantified achievements"])
 
         return "\n".join([f"• {rec}" for rec in recs[:5]])
 
