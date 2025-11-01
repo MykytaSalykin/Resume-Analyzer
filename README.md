@@ -21,14 +21,14 @@ AI-powered resume analysis system that matches resumes to job descriptions using
 ### Docker (Recommended)
 ```bash
 git clone https://github.com/MykytaSalykin/Resume-Analyzer.git
-cd rag-app
+cd Resume-Analyzer
 docker-compose up --build
 ```
 
 ### Local Development
 ```bash
 git clone https://github.com/MykytaSalykin/Resume-Analyzer.git
-cd rag-app
+cd Resume-Analyzer
 pip install -r requirements.txt
 uvicorn api:app --reload --port 8000
 # In new terminal: streamlit run ui/streamlit_app.py
