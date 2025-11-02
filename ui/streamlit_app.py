@@ -511,7 +511,9 @@ with tab2:
                             height=420,
                             margin=dict(l=30, r=30, t=60, b=20),
                         )
-                        st.plotly_chart(fig, use_container_width=True, key=f"radar_{i}_{r['name']}")
+                        st.plotly_chart(
+                            fig, use_container_width=True, key=f"radar_{idx}_{r['name']}"
+                        )
 
 st.divider()
 st.markdown(
