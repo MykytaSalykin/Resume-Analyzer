@@ -77,7 +77,7 @@ Defaults:
 ```
 app/
   chains/              # Matching logic and skills extraction
-  rag/                 # Embedding utilities
+  embeddings/          # Embedding utilities
 ui/
   streamlit_app.py     # Streamlit UI
 api.py                 # FastAPI application

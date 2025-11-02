@@ -70,7 +70,7 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
         jd_content_score = _evaluate_jd_content_depth(jd_clean)
 
         try:
-            from app.rag.embeddings import get_embedder
+            from app.embeddings.embeddings import get_embedder
             embedder = get_embedder()
         except Exception as e:
             print(f"WARNING: Embedder failed: {e}")

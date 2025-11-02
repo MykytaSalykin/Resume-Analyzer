@@ -13,7 +13,7 @@ import traceback
 import os
 
 from app.chains.enhanced_matcher import enhanced_match_resume_to_jd
-from app.rag.embeddings import get_embedder
+from app.embeddings.embeddings import get_embedder
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

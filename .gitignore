@@ -1,60 +1,37 @@
-# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Packages/build
 build/
 dist/
 .eggs/
 *.egg-info/
 *.egg
 wheels/
-
-# Test/coverage
 .tox/
 .nox/
 .coverage*
 htmlcov/
 .pytest_cache/
-
-# Jupyter/Notebooks
 .ipynb_checkpoints/
-
-# Environments
 .env
 .env.*
 .venv/
 venv/
 ENV/
-
-# IDE/Editor
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS files
 .DS_Store
 Thumbs.db
-
-# Logs and temp
 *.log
 logs/
 *.tmp
 *.temp
-
-# Large/model/data caches
 models/
 *.bin
 *.safetensors
-
-# Data
 data/vectorstore/*
 !data/vectorstore/.gitkeep
-
-# Docker
 .dockerignore
-
-# Local duplicates or nested workspaces
 Resume-Analyzer/
