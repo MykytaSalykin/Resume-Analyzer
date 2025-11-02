@@ -1,8 +1,14 @@
 # 🎯 Resume Analyzer
 
-AI-powered resume analysis that matches resumes to job descriptions with a clean Streamlit UI and FastAPI backend.
+<p align="left">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2F3.12-blue" />
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-ready-brightgreen" />
+  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-UI-orange" />
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-ready-blue" />
+  <img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub%20Actions-passing-success" />
+</p>
 
-Badges: Python 3.11/3.12, FastAPI, Streamlit, Docker, GitHub Actions.
+AI-powered resume analysis that matches resumes to job descriptions with a clean Streamlit UI and FastAPI backend.
 
 ## Features
 - Multi-dimensional scoring: Semantic, Skills, Experience, Education, Content Quality
@@ -11,6 +17,18 @@ Badges: Python 3.11/3.12, FastAPI, Streamlit, Docker, GitHub Actions.
 - Compare multiple resumes side-by-side
 - Robust PDF-to-text via MarkItDown with safe fallback
 - API with OpenAPI docs; Docker-ready; CI with tests, lint, and container health
+
+## Screenshots
+
+![Home](docs/images/ui_home.png)
+
+![Breakdown](docs/images/ui_breakdown.png)
+
+![Spider Chart](docs/images/ui_spider.png)
+
+![Comparison](docs/images/ui_compare.png)
+
+![Export](docs/images/ui_export.png)
 
 ## Quick Start (Local)
 1) Create env and install deps
