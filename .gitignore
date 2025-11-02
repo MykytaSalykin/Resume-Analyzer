@@ -31,7 +31,5 @@ logs/
 models/
 *.bin
 *.safetensors
-data/vectorstore/*
-!data/vectorstore/.gitkeep
 .dockerignore
 Resume-Analyzer/
