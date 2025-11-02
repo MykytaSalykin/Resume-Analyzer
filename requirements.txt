@@ -1,26 +1,14 @@
 fastapi
 uvicorn[standard]
 pydantic
-python-dotenv
-requests
-
 streamlit
 
 sentence-transformers
-faiss-cpu
-rank-bm25
-langchain-text-splitters
-
-markitdown[pdf]       
-beautifulsoup4
-
-transformers
 torch
+numpy
 
-httpx
-tqdm
-pandas
+markitdown[pdf]
+plotly
 python-multipart
 
 pytest
-plotly
