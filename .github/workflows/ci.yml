@@ -81,7 +81,19 @@ jobs:
         
     - name: Test Docker container
       run: |
-        docker run -d --name test-container -p 8000:8000 resume-analyzer:latest
-        sleep 30
-        curl -f http://localhost:8000/health || exit 1
-        docker stop test-container
+        # Run API container and skip heavy embeddings load in CI
+        docker run -d --name test-container -p 8000:8000 -e SKIP_EMBEDDINGS_LOAD=1 resume-analyzer:latest
+        
+        # Wait for health with retry (up to ~60s)
+        for i in {1..30}; do \
+          if curl -sf http://localhost:8000/health > /dev/null; then \
+            echo "API healthy"; \
+            break; \
+          fi; \
+          echo "Waiting for API to become healthy ($i/30)..."; \
+          sleep 2; \
+        done
+        
+        # Final check; dump logs if failing
+        curl -sf http://localhost:8000/health || (docker logs test-container; exit 1)
+        docker stop test-container && docker rm test-container

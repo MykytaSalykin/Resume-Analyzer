@@ -10,6 +10,7 @@ from typing import Dict, Any, List
 import uvicorn
 import logging
 import traceback
+import os
 
 # Import our analysis engine
 from app.chains.enhanced_matcher import enhanced_match_resume_to_jd
@@ -68,9 +69,14 @@ embeddings_model = None
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize the embeddings model on startup"""
+    """Initialize the embeddings model on startup unless disabled via env.
+    This avoids slow startup in CI/docker where model downloads are undesirable.
+    """
     global embeddings_model
     try:
+        if os.getenv("SKIP_EMBEDDINGS_LOAD", "0") in {"1", "true", "True"}:
+            logger.info("⏭️ Skipping embeddings model load due to SKIP_EMBEDDINGS_LOAD env")
+            return
         embeddings_model = get_embedder()
         logger.info("✅ Embeddings model loaded successfully")
     except Exception as e:
