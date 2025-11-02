@@ -1,2 +1,2 @@
-"""Test suite for RAG platform."""
+"""Test suite for Resume Analyzer project."""
 

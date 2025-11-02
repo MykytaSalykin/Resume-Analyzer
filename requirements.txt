@@ -20,5 +20,7 @@ torch
 httpx
 tqdm
 pandas
+python-multipart
 
 pytest
+plotly
