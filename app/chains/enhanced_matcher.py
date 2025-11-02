@@ -10,20 +10,42 @@ def _is_spam_or_fake(text: str) -> bool:
     words = text.lower().split()
     if len(words) < 10:
         return False
-    
+
     word_counts = {w: words.count(w) for w in set(words) if len(w) > 3}
     if any(count / len(words) > 0.2 for count in word_counts.values()):
         return True
-    
-    spam_patterns = [r"(.)\1{10,}", r"(python|java|sql)\s*(python|java|sql)\s*(python|java|sql)"]
+
+    spam_patterns = [
+        r"(.)\1{10,}",
+        r"(python|java|sql)\s*(python|java|sql)\s*(python|java|sql)",
+    ]
     return any(re.search(pattern, text.lower()) for pattern in spam_patterns)
 
 
 def extract_skills_fallback(text: str) -> List[str]:
     tech_skills = [
-        "python", "java", "javascript", "typescript", "react", "node.js", "sql",
-        "postgresql", "mysql", "mongodb", "docker", "kubernetes", "aws", "azure",
-        "git", "tensorflow", "pytorch", "pandas", "numpy", "html", "css", "django"
+        "python",
+        "java",
+        "javascript",
+        "typescript",
+        "react",
+        "node.js",
+        "sql",
+        "postgresql",
+        "mysql",
+        "mongodb",
+        "docker",
+        "kubernetes",
+        "aws",
+        "azure",
+        "git",
+        "tensorflow",
+        "pytorch",
+        "pandas",
+        "numpy",
+        "html",
+        "css",
+        "django",
     ]
     return [skill for skill in tech_skills if skill in text.lower()]
 
@@ -158,10 +180,26 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
 
 def _fallback_semantic_analysis(resume_text: str, jd_text: str) -> float:
     try:
-        stop_words = {"the", "and", "or", "in", "on", "at", "to", "for", "of", "with", "a", "an", "is", "are", "be"}
+        stop_words = {
+            "the",
+            "and",
+            "or",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "a",
+            "an",
+            "is",
+            "are",
+            "be",
+        }
         resume_words = set(re.findall(r"\b\w+\b", resume_text.lower())) - stop_words
         jd_words = set(re.findall(r"\b\w+\b", jd_text.lower())) - stop_words
-        
+
         if not jd_words:
             return 15.0
         overlap_ratio = len(resume_words & jd_words) / len(jd_words)
@@ -826,22 +864,37 @@ def _generate_recommendations(
         recs = []
 
         if overall < 20:
-            recs = ["🚨 Resume needs major overhaul", "📝 Add detailed work experience", "🛠️ List technical skills", "🎓 Include education"]
+            recs = [
+                "🚨 Resume needs major overhaul",
+                "📝 Add detailed work experience",
+                "🛠️ List technical skills",
+                "🎓 Include education",
+            ]
         elif overall < 35:
-            recs = ["📈 Significant improvements needed", "🎯 Focus on missing skills", "📝 Highlight relevant experience"]
+            recs = [
+                "📈 Significant improvements needed",
+                "🎯 Focus on missing skills",
+                "📝 Highlight relevant experience",
+            ]
         elif overall < 50:
-            recs = ["✨ Moderate improvements needed", "🛠️ Strengthen technical skills", "📝 Add quantified achievements"]
+            recs = [
+                "✨ Moderate improvements needed",
+                "🛠️ Strengthen technical skills",
+                "📝 Add quantified achievements",
+            ]
         else:
             recs = ["🎯 Good foundation", "📝 Add more detail", "🛠️ Highlight projects"]
 
         if missing and len(missing) > 0:
             recs.append(f"🎯 Missing skills: {', '.join(missing[:3])}")
-        
+
         if experience < 20:
             recs.append("📈 Build more relevant experience")
-        
+
         if overall < 30:
-            recs.extend(["📋 Improve resume structure", "📊 Add quantified achievements"])
+            recs.extend(
+                ["📋 Improve resume structure", "📊 Add quantified achievements"]
+            )
 
         return "\n".join([f"• {rec}" for rec in recs[:5]])
 
