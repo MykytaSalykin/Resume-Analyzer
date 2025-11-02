@@ -1,66 +1,81 @@
-# 🚀 AI Resume Analyzer
+# 🎯 Resume Analyzer
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)](https://fastapi.tiangolo.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+AI-powered resume analysis that matches resumes to job descriptions with a clean Streamlit UI and FastAPI backend.
 
-AI-powered resume analysis system that matches resumes to job descriptions using NLP.
+Badges: Python 3.11/3.12, FastAPI, Streamlit, Docker, GitHub Actions.
 
 ## Features
+- Multi-dimensional scoring: Semantic, Skills, Experience, Education, Content Quality
+- Clean recommendations without special bullets; readable explanations
+- Spider (radar) chart visualization; matched/missing skills
+- Compare multiple resumes side-by-side
+- Robust PDF-to-text via MarkItDown with safe fallback
+- API with OpenAPI docs; Docker-ready; CI with tests, lint, and container health
 
-- 🤖 **AI Analysis**: Semantic matching with sentence transformers
-- 📊 **Multi-Dimensional Scoring**: Skills (35%), Semantic (30%), Experience (20%), Education (15%)
-- 🌐 **REST API**: FastAPI backend with auto-documentation
-- 💻 **Web UI**: Streamlit dashboard
-- 🛡️ **Anti-Spam**: Content validation and filtering
-- 🐳 **Docker Ready**: Full containerization
-- 🧪 **Tested**: Comprehensive test suite
-
-## Quick Start
-
-### Docker (Recommended)
-```bash
-git clone https://github.com/MykytaSalykin/Resume-Analyzer.git
-cd Resume-Analyzer
-docker-compose up --build
+## Quick Start (Local)
+1) Create env and install deps
 ```
-
-### Local Development
-```bash
-git clone https://github.com/MykytaSalykin/Resume-Analyzer.git
-cd Resume-Analyzer
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn api:app --reload --port 8000
-# In new terminal: streamlit run ui/streamlit_app.py
+```
+2) Run API (terminal 1)
+```
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
+```
+3) Run UI (terminal 2)
+```
+streamlit run ui/streamlit_app.py
+```
+Access:
+- UI: http://localhost:8501
+- API docs: http://localhost:8000/docs
+
+Tip: If launching from the `ui/` folder directly, set PYTHONPATH or run from repo root.
+```
+export PYTHONPATH="$(pwd)"
 ```
 
-**Access:**
-- Web UI: http://localhost:8501
-- API Docs: http://localhost:8000/docs
+## Docker / Compose
+Build and run with Docker Compose:
+```
+docker compose up --build
+```
+Defaults:
+- API on 8000 (health: /health)
+- UI on 8501
+- In Compose, the API skips heavy embedding model load on startup for faster dev (can be removed by changing env).
 
-## API Usage
+## Environment Variables
+- EMBED_MODEL: sentence-transformers model (default: multi-qa-mpnet-base-dot-v1)
+- SKIP_EMBEDDINGS_LOAD: set to 1 to skip model load at API startup (useful in CI/containers)
 
-```bash
-curl -X POST http://localhost:8000/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resume_text": "Your resume text here...",
-    "job_description": "Job description here..."
-  }'
+## Project Structure
+```
+app/
+  chains/              # Matching logic and skills extraction
+  rag/                 # Embedding utilities
+ui/
+  streamlit_app.py     # Streamlit UI
+api.py                 # FastAPI application
+requirements.txt
+Dockerfile
+.github/workflows/ci.yml
 ```
 
-## Tech Stack
-
-- **Backend**: FastAPI, sentence-transformers
-- **Frontend**: Streamlit
-- **Testing**: pytest
-- **DevOps**: Docker, GitHub Actions
-
-## Testing
-
-```bash
-pytest tests/ -v
+## Testing & Lint
 ```
+pytest -v
+```
+CI runs:
+- Unit tests (pytest)
+- flake8 lint
+- Docker build + health check
+
+## Troubleshooting
+- ModuleNotFoundError: app when running UI → run from repo root or set PYTHONPATH.
+- PDF parsing issues → paste text as fallback; MarkItDown stream conversion + UTF-8 fallback is used.
+- Slow startup in container → set SKIP_EMBEDDINGS_LOAD=1 (already set in CI/Compose).
 
 ## License
-MIT License 
+MIT

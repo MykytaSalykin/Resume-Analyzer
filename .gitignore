@@ -2,94 +2,59 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
+
+# Packages/build
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
+wheels/
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Unit test / coverage reports
-htmlcov/
+# Test/coverage
 .tox/
 .nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
+.coverage*
+htmlcov/
 .pytest_cache/
-cover/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Jupyter/Notebooks
+.ipynb_checkpoints/
 
-# IPython
-profile_default/
-ipython_config.py
-
-# Environment variables
+# Environments
 .env
-.venv
-env/
+.env.*
+.venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
 
-# IDE
+# IDE/Editor
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# OS
+# OS files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# Logs
+# Logs and temp
 *.log
 logs/
+*.tmp
+*.temp
 
-# Model files (too large for git)
+# Large/model/data caches
+models/
 *.bin
 *.safetensors
-models/
 
-# Data files (can be large)
-data/documents/*.pdf
-data/documents/*.docx
-data/vectorstore/
+# Data
+data/vectorstore/*
+!data/vectorstore/.gitkeep
 
 # Docker
 .dockerignore
 
-# Temporary files
-*.tmp
-*.temp
+# Local duplicates or nested workspaces
+Resume-Analyzer/
