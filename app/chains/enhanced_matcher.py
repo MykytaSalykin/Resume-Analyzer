@@ -704,7 +704,7 @@ def _minimal_score_response(reason: str) -> Dict:
         "matched_skills": [],
         "missing_skills": ["Insufficient content for analysis"],
         "explanation": f"Very low score: {reason}. A complete resume should include detailed work experience, technical skills, education, and project descriptions.",
-        "recommendations": "• Provide comprehensive resume with work history\n• List specific technical skills and tools used\n• Include education background and certifications\n• Describe concrete projects and achievements\n• Ensure both resume and job description are detailed",
+        "recommendations": "Provide comprehensive resume with work history\nList specific technical skills and tools used\nInclude education background and certifications\nDescribe concrete projects and achievements\nEnsure both resume and job description are detailed",
         "resume_insights": {
             "content_depth": 0.03,
             "word_count": len(reason.split()),
@@ -733,7 +733,7 @@ def _error_score_response(reason: str) -> Dict:
         "matched_skills": [],
         "missing_skills": ["Analysis failed"],
         "explanation": f"Analysis failed: {reason}. Please check your input and try again.",
-        "recommendations": "• Verify proper text formatting\n• Check for special characters\n• Try with plain text versions",
+        "recommendations": "Verify proper text formatting\nCheck for special characters\nTry with plain text versions",
         "resume_insights": {
             "content_depth": 0.0,
             "word_count": 0,
@@ -896,7 +896,11 @@ def _generate_recommendations(
                 ["📋 Improve resume structure", "📊 Add quantified achievements"]
             )
 
-        return "\n".join([f"• {rec}" for rec in recs[:5]])
+        return "\n".join(recs[:5])
 
     except Exception:
-        return "• Focus on improving resume completeness and technical skills alignment\n• Add detailed work experience with specific achievements\n• Develop the technical skills mentioned in job requirements"
+        return (
+            "Focus on improving resume completeness and technical skills alignment\n"
+            "Add detailed work experience with specific achievements\n"
+            "Develop the technical skills mentioned in job requirements"
+        )

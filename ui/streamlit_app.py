@@ -263,9 +263,7 @@ with tab1:
                             height=420,
                             margin=dict(l=30, r=30, t=60, b=20),
                         )
-                        st.plotly_chart(
-                            fig, use_container_width=True, key="single_radar_chart"
-                        )
+                        st.plotly_chart(fig, use_container_width=True, key="single_radar_chart")
 
                         st.markdown("---")
                         st.subheader("💡 Explanation")
@@ -293,20 +291,17 @@ with tab1:
                         st.markdown("---")
                         st.subheader("🎯 Recommendations")
                         recs = result.get("recommendations", [])
+                        # Normalize to list of strings
                         if isinstance(recs, str):
-                            # Remove any leading bullet symbols like '•', '-', '*', and extra spaces
-                            lines = recs.splitlines()
-                            rec_list = []
-                            for line in lines:
-                                clean = re.sub(r"^[•\-\u2022\*\s]+", "", line).strip()
-                                if clean:
-                                    rec_list.append(clean)
+                            raw_lines = recs.splitlines()
                         else:
-                            rec_list = [
-                                re.sub(r"^[•\-\u2022\*\s]+", "", str(x)).strip()
-                                for x in recs
-                                if str(x).strip()
-                            ]
+                            raw_lines = [str(x) for x in recs]
+                        # Strip leading bullet symbols like •, -, *, and spaces
+                        rec_list = []
+                        for line in raw_lines:
+                            clean = re.sub(r"^[\s\-\*•\u2022]+", "", line or "").strip()
+                            if clean:
+                                rec_list.append(clean)
                         if not rec_list:
                             st.write("No recommendations.")
                         else:
@@ -516,11 +511,7 @@ with tab2:
                             height=420,
                             margin=dict(l=30, r=30, t=60, b=20),
                         )
-                        st.plotly_chart(
-                            fig,
-                            use_container_width=True,
-                            key=f"radar_{idx}_{r['name']}",
-                        )
+                        st.plotly_chart(fig, use_container_width=True, key=f"radar_{i}_{r['name']}")
 
 st.divider()
 st.markdown(
