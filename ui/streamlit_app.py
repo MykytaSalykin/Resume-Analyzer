@@ -5,18 +5,14 @@ from pathlib import Path
 import re
 import plotly.graph_objects as go
 
-# Pandas is optional for the UI table; fall back gracefully if missing
 try:
     import pandas as pd  # type: ignore
-
     HAS_PANDAS = True
 except Exception:  # pragma: no cover
     pd = None  # type: ignore
     HAS_PANDAS = False
 
 
-# Ensure the repository root (that contains the `app` package) is on sys.path
-# This makes running `streamlit run ui/streamlit_app.py` from the ui/ folder work.
 def _ensure_repo_root_on_path():
     here = Path(__file__).resolve()
     candidates = [here.parent, here.parent.parent, here.parent.parent.parent]
@@ -29,9 +25,7 @@ def _ensure_repo_root_on_path():
 
 _ensure_repo_root_on_path()
 
-from app.chains.enhanced_matcher import (
-    enhanced_match_resume_to_jd as match_resume_to_jd,
-)
+from app.chains.enhanced_matcher import enhanced_match_resume_to_jd as match_resume_to_jd  # noqa: E402
 
 
 st.set_page_config(page_title="Resume Matcher", page_icon="🎯", layout="wide")
@@ -66,14 +60,13 @@ def _looks_gibberish(text: str) -> bool:
 
 
 def load_resume_file(uploaded_file) -> str:
-    """Extract text from an uploaded PDF using MarkItDown with safe fallbacks."""
+    """Extract text from an uploaded PDF with safe fallbacks."""
     if not uploaded_file:
         return ""
     text = ""
     try:
         uploaded_file.seek(0)
         md = markitdown.MarkItDown()
-        # convert_stream works with file-like objects from st.file_uploader
         res = md.convert_stream(uploaded_file)
         if hasattr(res, "text_content") and res.text_content:
             text = res.text_content
@@ -84,7 +77,6 @@ def load_resume_file(uploaded_file) -> str:
         else:
             text = str(res) if res is not None else ""
     except Exception:
-        # Fallback to permissive UTF-8 decode
         try:
             uploaded_file.seek(0)
             text = uploaded_file.read().decode("utf-8", errors="ignore")
@@ -158,7 +150,6 @@ with tab1:
         elif not jd_text.strip():
             st.error("Please provide a job description")
         else:
-            # Reject gibberish inputs early
             if _looks_gibberish(resume_text) or _looks_gibberish(jd_text):
                 st.error(
                     "The provided text looks invalid. Please paste a proper resume and job description."
@@ -168,7 +159,6 @@ with tab1:
                     try:
                         result = match_resume_to_jd(resume_text, jd_text)
 
-                        # Boost display score for strong matches
                         overall_raw = float(result.get("overall_score", 0))
                         br = result.get("breakdown", {})
                         sem = float(br.get("semantic", 0))
@@ -229,7 +219,6 @@ with tab1:
                                     delta_color=delta_color,
                                 )
 
-                        # Replace bar chart with spider chart
                         st.markdown("---")
                         st.subheader("📈 Score Components")
                         categories_map = {
@@ -291,12 +280,10 @@ with tab1:
                         st.markdown("---")
                         st.subheader("🎯 Recommendations")
                         recs = result.get("recommendations", [])
-                        # Normalize to list of strings
                         if isinstance(recs, str):
                             raw_lines = recs.splitlines()
                         else:
                             raw_lines = [str(x) for x in recs]
-                        # Strip leading bullet symbols like •, -, *, and spaces
                         rec_list = []
                         for line in raw_lines:
                             clean = re.sub(r"^[\s\-\*•\u2022]+", "", line or "").strip()
@@ -394,7 +381,6 @@ with tab2:
                     resume_text = load_resume_file(uploaded_file)
                     if resume_text:
                         try:
-                            # Skip gibberish resumes
                             if _looks_gibberish(resume_text):
                                 st.warning(
                                     f"Skipped {uploaded_file.name}: Gibberish resume"
@@ -476,7 +462,6 @@ with tab2:
                                 ", ".join(r["result"]["missing_skills"]) or "None",
                             )
 
-                        # Spider chart for each resume in the comparison
                         st.markdown("---")
                         st.subheader("📈 Score Components")
                         categories_map = {

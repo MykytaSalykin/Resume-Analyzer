@@ -10,6 +10,23 @@
 
 AI-powered resume analysis that matches resumes to job descriptions with a clean Streamlit UI and FastAPI backend.
 
+<!-- Screenshots shown first, no links -->
+<p>
+  <img src="docs/images/photo_5204283757887092178_w.jpg" alt="Home" width="100%" />
+</p>
+<p>
+  <img src="docs/images/photo_5204283757887092180_w.jpg" alt="Breakdown" width="100%" />
+</p>
+<p>
+  <img src="docs/images/photo_5204283757887092181_w.jpg" alt="Spider Chart" width="100%" />
+</p>
+<p>
+  <img src="docs/images/photo_5204283757887092193_w.jpg" alt="Comparison" width="100%" />
+</p>
+<p>
+  <img src="docs/images/photo_5204283757887092194_w.jpg" alt="Export" width="100%" />
+</p>
+
 ## Features
 - Multi-dimensional scoring: Semantic, Skills, Experience, Education, Content Quality
 - Clean recommendations without special bullets; readable explanations
@@ -17,18 +34,6 @@ AI-powered resume analysis that matches resumes to job descriptions with a clean
 - Compare multiple resumes side-by-side
 - Robust PDF-to-text via MarkItDown with safe fallback
 - API with OpenAPI docs; Docker-ready; CI with tests, lint, and container health
-
-## Screenshots
-
-![Home](docs/images/ui_home.png)
-
-![Breakdown](docs/images/ui_breakdown.png)
-
-![Spider Chart](docs/images/ui_spider.png)
-
-![Comparison](docs/images/ui_compare.png)
-
-![Export](docs/images/ui_export.png)
 
 ## Quick Start (Local)
 1) Create env and install deps

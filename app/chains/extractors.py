@@ -10,7 +10,6 @@ LOCATION_RE = re.compile(
     re.I,
 )
 
-# Common tech skills patterns
 SKILL_PATTERNS = {
     "programming_languages": [
         r"\bpython\b",
@@ -107,7 +106,7 @@ SKILL_PATTERNS = {
 
 @dataclass
 class ResumeInfo:
-    """Structured representation of resume information."""
+    """Structured resume info for UI/API."""
 
     email: Optional[str] = None
     phone: Optional[str] = None
@@ -136,38 +135,30 @@ class ResumeInfo:
 
 
 def extract_email(text: str) -> Optional[str]:
-    """Extract email address from text."""
+    """Extract email."""
     m = EMAIL_RE.search(text)
     return m.group(0) if m else None
 
 
 def extract_phone(text: str) -> Optional[str]:
-    """Extract phone number from text."""
+    """Extract phone number."""
     m = PHONE_RE.search(text)
     return m.group(0) if m else None
 
 
 def extract_urls(text: str) -> List[str]:
-    """Extract all URLs from text."""
+    """Extract URLs."""
     return list({m.group(0) for m in URL_RE.finditer(text)})
 
 
 def extract_location(text: str) -> Optional[str]:
-    """Extract location from text."""
+    """Extract location."""
     m = LOCATION_RE.search(text)
     return m.group(0) if m else None
 
 
 def extract_skills_by_category(text: str) -> Dict[str, List[str]]:
-    """
-    Extract technical skills by category using regex patterns.
-
-    Args:
-        text: Resume text content
-
-    Returns:
-        Dictionary mapping skill categories to lists of skills
-    """
+    """Extract technical skills by category."""
     text_lower = text.lower()
     skills = {}
 
@@ -183,15 +174,7 @@ def extract_skills_by_category(text: str) -> Dict[str, List[str]]:
 
 
 def parse_resume(text: str) -> Dict:
-    """
-    Comprehensive resume parser that extracts structured information.
-
-    Args:
-        text: Resume text content
-
-    Returns:
-        Dictionary with all extracted resume information
-    """
+    """Return normalized resume info."""
     resume_info = ResumeInfo(
         email=extract_email(text),
         phone=extract_phone(text),

@@ -61,7 +61,6 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
         if len(jd_clean) < 20:
             return _minimal_score_response("Job description too short")
 
-        # Anti-spam checks
         if _is_spam_or_fake(resume_clean):
             return _minimal_score_response(
                 "Resume appears to be spam or artificially generated"
@@ -70,16 +69,13 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
         resume_content_score = _evaluate_content_depth(resume_clean)
         jd_content_score = _evaluate_jd_content_depth(jd_clean)
 
-        # Get embedder
         try:
             from app.rag.embeddings import get_embedder
-
             embedder = get_embedder()
         except Exception as e:
             print(f"WARNING: Embedder failed: {e}")
             embedder = None
 
-        # 1. SEMANTIC ANALYSIS (30%) - with fallback
         if embedder is not None:
             try:
                 semantic_score = _semantic_analysis(resume_clean, jd_clean, embedder)
@@ -89,7 +85,6 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
         else:
             semantic_score = _fallback_semantic_analysis(resume_clean, jd_clean)
 
-        # 2. SKILLS MATCH (35%) - Most important
         try:
             skills_score, matched_skills, missing_skills = _skills_analysis(
                 resume_clean, jd_clean
@@ -100,25 +95,21 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
                 resume_clean, jd_clean
             )
 
-        # 3. EXPERIENCE ANALYSIS (20%)
         try:
             experience_score = _experience_analysis(resume_clean, jd_clean)
         except Exception as e:
             print(f"Experience analysis failed: {e}")
             experience_score = 20.0
 
-        # 4. QUALIFICATIONS (15%)
         try:
             qualifications_score = _qualifications_analysis(resume_clean, jd_clean)
         except Exception as e:
             print(f"Qualifications analysis failed: {e}")
             qualifications_score = 30.0
 
-        # More lenient content multiplier
         content_multiplier = min(resume_content_score + 0.3, jd_content_score + 0.2)
         content_multiplier = min(content_multiplier, 1.0)
 
-        # Base weighted score
         base_score = (
             semantic_score * 0.30
             + skills_score * 0.35
@@ -126,7 +117,6 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
             + qualifications_score * 0.15
         )
 
-        # Less harsh penalty for content quality
         overall = base_score * (0.7 + content_multiplier * 0.3)
         overall = min(overall, 95.0)
 
@@ -172,7 +162,6 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
         }
 
     except Exception as e:
-        # Full error traceback for debugging
         error_msg = f"Complete analysis failure: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)
         return _error_score_response(f"System error: {str(e)}")
@@ -211,7 +200,7 @@ def _fallback_semantic_analysis(resume_text: str, jd_text: str) -> float:
 def _fallback_skills_analysis(
     resume_text: str, jd_text: str
 ) -> Tuple[float, List[str], List[str]]:
-    """Fallback skills analysis using simple keyword matching."""
+    """Fallback skills analysis."""
     try:
         resume_skills = extract_skills_fallback(resume_text)
         jd_skills = extract_skills_fallback(jd_text)
@@ -222,7 +211,6 @@ def _fallback_skills_analysis(
         if not resume_skills:
             return 5.0, [], jd_skills[:5]
 
-        # Find matches
         matched = []
         for jd_skill in jd_skills:
             if any(_skills_match(jd_skill, r_skill) for r_skill in resume_skills):
@@ -230,9 +218,8 @@ def _fallback_skills_analysis(
 
         missing = [skill for skill in jd_skills if skill not in matched]
 
-        # Simple scoring
         coverage = len(matched) / len(jd_skills) if jd_skills else 0
-        score = coverage * 60  # Max 60 for fallback
+        score = coverage * 60
 
         return min(score, 60.0), matched[:8], missing[:8]
 
@@ -298,14 +285,14 @@ def _evaluate_jd_content_depth(text: str) -> float:
             return 0.1
 
         score = 0.0
-        score += min(0.5, req_count * 0.08)  # Requirements (50%)
-        score += min(0.3, tech_count * 0.05)  # Tech content (30%)
-        score += min(0.2, company_count * 0.05)  # Company info (20%)
+        score += min(0.5, req_count * 0.08)
+        score += min(0.3, tech_count * 0.05)
+        score += min(0.2, company_count * 0.05)
 
         return min(1.0, score)
 
     except Exception:
-        return 0.3  # Default moderate score
+        return 0.3
 
 
 def _evaluate_content_depth(text: str) -> float:
@@ -313,7 +300,6 @@ def _evaluate_content_depth(text: str) -> float:
         text_lower = text.lower()
         word_count = len(text.split())
 
-        # More lenient word count thresholds
         if word_count < 30:
             return 0.15
         elif word_count < 50:
@@ -402,16 +388,14 @@ def _evaluate_content_depth(text: str) -> float:
 
 
 def _semantic_analysis(resume_text: str, jd_text: str, embedder) -> float:
-    """Semantic similarity with comprehensive error handling."""
+    """Semantic similarity with error handling."""
     try:
-        # Split into chunks
         resume_chunks = _split_text_semantically(resume_text)
         jd_chunks = _split_text_semantically(jd_text)
 
         if not resume_chunks or not jd_chunks:
             return _fallback_semantic_analysis(resume_text, jd_text)
 
-        # Get embeddings with error handling
         try:
             all_chunks = resume_chunks + jd_chunks
             embeddings = embedder.encode(all_chunks, normalize_embeddings=True)
@@ -423,11 +407,9 @@ def _semantic_analysis(resume_text: str, jd_text: str, embedder) -> float:
             print(f"Embedding generation failed: {e}")
             return _fallback_semantic_analysis(resume_text, jd_text)
 
-        # Split embeddings
         resume_embs = embeddings[: len(resume_chunks)]
         jd_embs = embeddings[len(resume_chunks) :]
 
-        # Calculate similarities
         similarities = []
         for jd_emb in jd_embs:
             best_sim = 0.0
@@ -438,15 +420,14 @@ def _semantic_analysis(resume_text: str, jd_text: str, embedder) -> float:
 
         avg_similarity = np.mean(similarities)
 
-        # More balanced scoring scale
         if avg_similarity < 0.3:
-            return avg_similarity * 33  # 0-10 range
+            return avg_similarity * 33
         elif avg_similarity < 0.6:
-            return 10 + (avg_similarity - 0.3) * 67  # 10-30 range
+            return 10 + (avg_similarity - 0.3) * 67
         elif avg_similarity < 0.8:
-            return 30 + (avg_similarity - 0.6) * 100  # 30-50 range
+            return 30 + (avg_similarity - 0.6) * 100
         else:
-            return 50 + (avg_similarity - 0.8) * 150  # 50-80 range
+            return 50 + (avg_similarity - 0.8) * 150
 
     except Exception as e:
         print(f"Semantic analysis error: {e}")
@@ -472,7 +453,7 @@ def _extract_skills_comprehensive(text: str) -> List[str]:
 def _skills_analysis(
     resume_text: str, jd_text: str
 ) -> Tuple[float, List[str], List[str]]:
-    """Skills analysis with better error handling."""
+    """Skills analysis with error handling."""
     try:
         jd_skills = _extract_skills_comprehensive(jd_text)
         resume_skills = _extract_skills_comprehensive(resume_text)
@@ -483,7 +464,6 @@ def _skills_analysis(
         if not resume_skills:
             return 3.0, [], jd_skills[:8]
 
-        # Find matches
         matched_skills = []
         for jd_skill in jd_skills:
             if any(_skills_match(jd_skill, r_skill) for r_skill in resume_skills):
@@ -491,7 +471,6 @@ def _skills_analysis(
 
         missing_skills = [skill for skill in jd_skills if skill not in matched_skills]
 
-        # Only add commonly expected skills if JD mentions team/collaborative work
         jd_lower = jd_text.lower()
         if any(
             word in jd_lower
@@ -505,25 +484,24 @@ def _skills_analysis(
                 ):
                     missing_skills.append(skill)
 
-        # More balanced scoring
         coverage = len(matched_skills) / max(1, len(jd_skills))
 
         if coverage == 0:
-            score = 5  # Small base score
+            score = 5
         elif coverage < 0.2:
-            score = 5 + coverage * 50  # 5-15 range
+            score = 5 + coverage * 50
         elif coverage < 0.5:
-            score = 15 + (coverage - 0.2) * 67  # 15-35 range
+            score = 15 + (coverage - 0.2) * 67
         elif coverage < 0.8:
-            score = 35 + (coverage - 0.5) * 67  # 35-55 range
+            score = 35 + (coverage - 0.5) * 67
         else:
-            score = 55 + (coverage - 0.8) * 125  # 55-80 range
+            score = 55 + (coverage - 0.8) * 125
 
         return (
             min(score, 85.0),
             matched_skills[:10],
             missing_skills[:15],
-        )  # Show more missing skills
+        )
 
     except Exception as e:
         print(f"Skills analysis error: {e}")
@@ -584,7 +562,6 @@ def _qualifications_analysis(resume_text: str, jd_text: str) -> float:
         return 35.0
 
 
-# Keep all helper functions the same...
 def _split_text_semantically(text: str) -> List[str]:
     """Split text into chunks."""
     try:
@@ -665,13 +642,11 @@ def _extract_years_required(text: str) -> int:
 def _extract_years_experience(text: str) -> int:
     """Extract years from resume."""
     try:
-        # Year ranges
         year_ranges = re.findall(r"(20\d{2})\s*[-–—]\s*(20\d{2})", text)
         if year_ranges:
             total_years = sum(int(end) - int(start) for start, end in year_ranges)
             return total_years
 
-        # Explicit years
         explicit_years = re.findall(
             r"(\d+)\+?\s*years?\s+(?:of\s+)?experience", text.lower()
         )
@@ -796,7 +771,6 @@ def _generate_explanation(
         else:
             parts.append("🎯 RELEVANCE: Strong content alignment")
 
-        # Skills analysis - much more detailed
         if skills < 10:
             skill_msg = "🛠️ TECHNICAL SKILLS: Critical skills shortage - appears to lack most/all required technical competencies"
             if not matched and missing:
@@ -818,7 +792,6 @@ def _generate_explanation(
                 f"🛠️ TECHNICAL SKILLS: Good coverage - {len(matched)} relevant skills identified"
             )
 
-        # Experience analysis
         if experience < 20:
             parts.append(
                 "💼 EXPERIENCE: Insufficient relevant experience demonstrated or no clear work history provided"
@@ -836,7 +809,6 @@ def _generate_explanation(
                 "💼 EXPERIENCE: Strong relevant experience matching job requirements"
             )
 
-        # Education/qualifications
         if qualifications < 30:
             parts.append(
                 "🎓 QUALIFICATIONS: Education/certification requirements not clearly met"
