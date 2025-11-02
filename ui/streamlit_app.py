@@ -14,6 +14,7 @@ except Exception:  # pragma: no cover
     pd = None  # type: ignore
     HAS_PANDAS = False
 
+
 # Ensure the repository root (that contains the `app` package) is on sys.path
 # This makes running `streamlit run ui/streamlit_app.py` from the ui/ folder work.
 def _ensure_repo_root_on_path():
@@ -24,6 +25,7 @@ def _ensure_repo_root_on_path():
             if str(p) not in sys.path:
                 sys.path.insert(0, str(p))
             return
+
 
 _ensure_repo_root_on_path()
 
@@ -261,7 +263,9 @@ with tab1:
                             height=420,
                             margin=dict(l=30, r=30, t=60, b=20),
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(
+                            fig, use_container_width=True, key="single_radar_chart"
+                        )
 
                         st.markdown("---")
                         st.subheader("💡 Explanation")
@@ -290,13 +294,19 @@ with tab1:
                         st.subheader("🎯 Recommendations")
                         recs = result.get("recommendations", [])
                         if isinstance(recs, str):
-                            rec_list = [
-                                line.strip()
-                                for line in recs.splitlines()
-                                if line.strip()
-                            ]
+                            # Remove any leading bullet symbols like '•', '-', '*', and extra spaces
+                            lines = recs.splitlines()
+                            rec_list = []
+                            for line in lines:
+                                clean = re.sub(r"^[•\-\u2022\*\s]+", "", line).strip()
+                                if clean:
+                                    rec_list.append(clean)
                         else:
-                            rec_list = recs
+                            rec_list = [
+                                re.sub(r"^[•\-\u2022\*\s]+", "", str(x)).strip()
+                                for x in recs
+                                if str(x).strip()
+                            ]
                         if not rec_list:
                             st.write("No recommendations.")
                         else:
@@ -437,9 +447,9 @@ with tab2:
                 st.markdown("---")
                 st.subheader("📋 Detailed Breakdowns")
 
-                for i, r in enumerate(results_list, 1):
+                for idx, r in enumerate(results_list, 1):
                     with st.expander(
-                        f"🏆 Rank #{i}: {r['name']} ({r['score']:.1f}/100)"
+                        f"🏆 Rank #{idx}: {r['name']} ({r['score']:.1f}/100)"
                     ):
                         breakdown = r["result"]["breakdown"]
 
@@ -452,8 +462,8 @@ with tab2:
                         num_cols = min(4, len(metrics_list))
                         cols = st.columns(num_cols)
 
-                        for i, (label, score) in enumerate(metrics_list):
-                            col_idx = i % num_cols
+                        for j, (label, score) in enumerate(metrics_list):
+                            col_idx = j % num_cols
                             with cols[col_idx]:
                                 st.metric(label, f"{score:.0f}%")
 
@@ -506,7 +516,11 @@ with tab2:
                             height=420,
                             margin=dict(l=30, r=30, t=60, b=20),
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(
+                            fig,
+                            use_container_width=True,
+                            key=f"radar_{idx}_{r['name']}",
+                        )
 
 st.divider()
 st.markdown(
