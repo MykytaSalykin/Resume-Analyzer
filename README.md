@@ -8,15 +8,28 @@ An AI-powered resume analysis tool that helps job seekers optimize their resumes
 
 ## 📸 Screenshots
 
-<div align="center">
-  <img src="docs/images/photo_5278403786634367183_w.jpg" alt="Landing Page" width="45%">
-  <img src="docs/images/photo_5278403786634367186_w.jpg" alt="Resume Upload" width="45%">
-</div>
-
-<div align="center">
-  <img src="docs/images/photo_5278403786634367187_w.jpg" alt="Analysis Results" width="45%">
-  <img src="docs/images/photo_5278403786634367188_w.jpg" alt="Detailed Breakdown" width="45%">
-</div>
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/images/photo_5278403786634367183_w.jpg" alt="Landing Page" width="100%">
+      <p align="center"><em>Modern landing page with animated background</em></p>
+    </td>
+    <td width="50%">
+      <img src="docs/images/photo_5278403786634367186_w.jpg" alt="Resume Upload" width="100%">
+      <p align="center"><em>File upload and text input interface</em></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/images/photo_5278403786634367187_w.jpg" alt="Analysis Results" width="100%">
+      <p align="center"><em>Comprehensive analysis with visual breakdown</em></p>
+    </td>
+    <td width="50%">
+      <img src="docs/images/photo_5278403786634367188_w.jpg" alt="Detailed Breakdown" width="100%">
+      <p align="center"><em>Detailed scores and radar chart visualization</em></p>
+    </td>
+  </tr>
+</table>
 
 ## Features
 
