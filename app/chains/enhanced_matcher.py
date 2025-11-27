@@ -71,6 +71,7 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
 
         try:
             from app.embeddings.embeddings import get_embedder
+
             embedder = get_embedder()
         except Exception as e:
             print(f"WARNING: Embedder failed: {e}")
@@ -107,9 +108,13 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
             print(f"Qualifications analysis failed: {e}")
             qualifications_score = 30.0
 
-        content_multiplier = min(resume_content_score + 0.3, jd_content_score + 0.2)
-        content_multiplier = min(content_multiplier, 1.0)
+        # Enhanced content quality calculation for more consistency
+        content_multiplier = resume_content_score * 0.6 + jd_content_score * 0.4
+        content_multiplier = max(
+            0.3, min(content_multiplier, 1.0)
+        )  # Ensure minimum baseline
 
+        # Updated weighting for better accuracy
         base_score = (
             semantic_score * 0.30
             + skills_score * 0.35
@@ -117,8 +122,15 @@ def enhanced_match_resume_to_jd(resume_text: str, jd_text: str) -> Dict:
             + qualifications_score * 0.15
         )
 
-        overall = base_score * (0.7 + content_multiplier * 0.3)
-        overall = min(overall, 95.0)
+        # More consistent scoring calculation
+        overall = base_score * (0.75 + content_multiplier * 0.25)
+
+        # Apply stricter ceiling for more realistic scores
+        overall = min(overall, 92.0)
+
+        # Ensure minimum threshold for very low quality resumes
+        if resume_content_score < 0.15:
+            overall = min(overall, 25.0)
 
         explanation = _generate_explanation(
             semantic_score,
@@ -410,24 +422,41 @@ def _semantic_analysis(resume_text: str, jd_text: str, embedder) -> float:
         resume_embs = embeddings[: len(resume_chunks)]
         jd_embs = embeddings[len(resume_chunks) :]
 
-        similarities = []
+        # Bidirectional similarity for better accuracy
+        jd_to_resume_sims = []
         for jd_emb in jd_embs:
             best_sim = 0.0
             for resume_emb in resume_embs:
                 sim = float(np.dot(jd_emb, resume_emb))
                 best_sim = max(best_sim, sim)
-            similarities.append(best_sim)
+            jd_to_resume_sims.append(best_sim)
 
-        avg_similarity = np.mean(similarities)
+        resume_to_jd_sims = []
+        for resume_emb in resume_embs:
+            best_sim = 0.0
+            for jd_emb in jd_embs:
+                sim = float(np.dot(resume_emb, jd_emb))
+                best_sim = max(best_sim, sim)
+            resume_to_jd_sims.append(best_sim)
 
-        if avg_similarity < 0.3:
-            return avg_similarity * 33
+        # Use weighted average of both directions for more consistent results
+        avg_similarity = (
+            np.mean(jd_to_resume_sims) * 0.6 + np.mean(resume_to_jd_sims) * 0.4
+        )
+
+        # More refined scoring curve for better consistency
+        if avg_similarity < 0.2:
+            return avg_similarity * 25  # 0-5%
+        elif avg_similarity < 0.4:
+            return 5 + (avg_similarity - 0.2) * 75  # 5-20%
         elif avg_similarity < 0.6:
-            return 10 + (avg_similarity - 0.3) * 67
-        elif avg_similarity < 0.8:
-            return 30 + (avg_similarity - 0.6) * 100
+            return 20 + (avg_similarity - 0.4) * 100  # 20-40%
+        elif avg_similarity < 0.75:
+            return 40 + (avg_similarity - 0.6) * 133  # 40-60%
+        elif avg_similarity < 0.85:
+            return 60 + (avg_similarity - 0.75) * 150  # 60-75%
         else:
-            return 50 + (avg_similarity - 0.8) * 150
+            return 75 + (avg_similarity - 0.85) * 100  # 75-90%
 
     except Exception as e:
         print(f"Semantic analysis error: {e}")
@@ -484,22 +513,34 @@ def _skills_analysis(
                 ):
                     missing_skills.append(skill)
 
+        # Calculate both coverage and match quality
         coverage = len(matched_skills) / max(1, len(jd_skills))
 
+        # Bonus for having more skills than required
+        extra_skills = max(0, len(resume_skills) - len(jd_skills))
+        bonus = min(5, extra_skills * 0.5)
+
+        # More consistent and realistic scoring curve
         if coverage == 0:
-            score = 5
-        elif coverage < 0.2:
-            score = 5 + coverage * 50
-        elif coverage < 0.5:
-            score = 15 + (coverage - 0.2) * 67
-        elif coverage < 0.8:
-            score = 35 + (coverage - 0.5) * 67
+            score = 3
+        elif coverage < 0.15:
+            score = 3 + coverage * 40  # 3-9%
+        elif coverage < 0.35:
+            score = 9 + (coverage - 0.15) * 75  # 9-24%
+        elif coverage < 0.55:
+            score = 24 + (coverage - 0.35) * 90  # 24-42%
+        elif coverage < 0.75:
+            score = 42 + (coverage - 0.55) * 95  # 42-61%
+        elif coverage < 0.90:
+            score = 61 + (coverage - 0.75) * 93  # 61-75%
         else:
-            score = 55 + (coverage - 0.8) * 125
+            score = 75 + (coverage - 0.90) * 100  # 75-85%
+
+        final_score = min(score + bonus, 88.0)
 
         return (
-            min(score, 85.0),
-            matched_skills[:10],
+            final_score,
+            matched_skills[:12],
             missing_skills[:15],
         )
 
@@ -509,7 +550,7 @@ def _skills_analysis(
 
 
 def _experience_analysis(resume_text: str, jd_text: str) -> float:
-    """Experience analysis."""
+    """Enhanced experience analysis with more granular scoring."""
     try:
         jd_years = _extract_years_required(jd_text)
         resume_years = _extract_years_experience(resume_text)
@@ -517,49 +558,119 @@ def _experience_analysis(resume_text: str, jd_text: str) -> float:
         score = 0.0
 
         if jd_years > 0:
-            if resume_years >= jd_years:
-                score = 80.0
-            elif resume_years >= jd_years * 0.7:
-                score = 50.0
+            ratio = resume_years / jd_years
+            if ratio >= 1.5:
+                score = 85.0  # Significantly exceeds requirements
+            elif ratio >= 1.0:
+                score = 75.0  # Meets or slightly exceeds requirements
+            elif ratio >= 0.8:
+                score = 60.0  # Close to requirements
+            elif ratio >= 0.6:
+                score = 45.0  # Somewhat below requirements
+            elif ratio >= 0.4:
+                score = 30.0  # Significantly below requirements
             elif resume_years > 0:
-                score = 25.0 * (resume_years / jd_years)
-        else:
-            if resume_years > 0:
-                score = 50.0
+                score = 15.0 + (ratio * 25)  # Some experience but far below
             else:
-                score = 20.0
+                score = 5.0  # No experience listed
+        else:
+            # No specific years required, score based on presence of experience
+            if resume_years >= 5:
+                score = 70.0
+            elif resume_years >= 3:
+                score = 55.0
+            elif resume_years >= 1:
+                score = 40.0
+            elif resume_years > 0:
+                score = 25.0
+            else:
+                score = 15.0
 
-        return min(score, 85.0)
+        return min(score, 87.0)
 
     except Exception:
-        return 25.0
+        return 20.0
 
 
 def _qualifications_analysis(resume_text: str, jd_text: str) -> float:
-    """Basic qualifications analysis."""
+    """Enhanced qualifications analysis with better granularity."""
     try:
         resume_lower = resume_text.lower()
         jd_lower = jd_text.lower()
 
-        education_terms = [
-            "bachelor",
-            "master",
-            "phd",
-            "degree",
-            "university",
-            "college",
+        # Check for different education levels
+        education_levels = {
+            "phd": 100,
+            "doctorate": 100,
+            "master": 80,
+            "mba": 80,
+            "bachelor": 60,
+            "associate": 40,
+            "degree": 50,
+            "university": 55,
+            "college": 45,
+        }
+
+        certifications = [
+            "certified",
+            "certification",
+            "certificate",
+            "aws certified",
+            "microsoft certified",
+            "cisco",
+            "comptia",
+            "pmp",
+            "scrum master",
         ]
 
-        resume_has_education = any(term in resume_lower for term in education_terms)
-        jd_requires_education = any(term in jd_lower for term in education_terms)
+        # Find highest education level in resume
+        resume_edu_score = 0
+        for term, score in education_levels.items():
+            if term in resume_lower:
+                resume_edu_score = max(resume_edu_score, score)
 
-        if jd_requires_education:
-            return 70.0 if resume_has_education else 20.0
+        # Check for certifications
+        resume_has_certs = any(cert in resume_lower for cert in certifications)
+        cert_bonus = 15 if resume_has_certs else 0
+
+        # Find required education level in JD
+        jd_edu_score = 0
+        for term, score in education_levels.items():
+            if term in jd_lower:
+                jd_edu_score = max(jd_edu_score, score)
+
+        jd_requires_certs = any(cert in jd_lower for cert in certifications)
+
+        # Calculate score based on match
+        if jd_edu_score > 0:
+            if resume_edu_score >= jd_edu_score:
+                base_score = 75.0
+            elif resume_edu_score >= jd_edu_score * 0.7:
+                base_score = 55.0
+            elif resume_edu_score > 0:
+                base_score = 30.0
+            else:
+                base_score = 10.0
         else:
-            return 50.0 if resume_has_education else 40.0
+            # No specific education required
+            if resume_edu_score > 0:
+                base_score = 60.0
+            else:
+                base_score = 35.0
+
+        # Add certification bonus
+        if jd_requires_certs and resume_has_certs:
+            cert_bonus = 15
+        elif jd_requires_certs and not resume_has_certs:
+            cert_bonus = -10
+        elif not jd_requires_certs and resume_has_certs:
+            cert_bonus = 5
+
+        final_score = base_score + cert_bonus
+        return max(5.0, min(final_score, 85.0))
 
     except Exception:
-        return 35.0
+        return 30.0
 
 
 def _split_text_semantically(text: str) -> List[str]:

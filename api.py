@@ -1,9 +1,4 @@
-"""
-FastAPI REST API for Resume Analysis
-Provides enterprise-ready endpoints for resume matching
-"""
-
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Any, List
@@ -92,7 +87,9 @@ async def analyze_resume(request: AnalysisRequest):
         logger.info(
             f"Analyzing resume ({len(request.resume_text)} chars) vs JD ({len(request.job_description)} chars)"
         )
-        result = enhanced_match_resume_to_jd(request.resume_text, request.job_description)
+        result = enhanced_match_resume_to_jd(
+            request.resume_text, request.job_description
+        )
         logger.info(f"Analysis complete - Score: {result['overall_score']:.1f}")
         return AnalysisResponse(**result)
     except ValueError as e:
@@ -100,14 +97,16 @@ async def analyze_resume(request: AnalysisRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Analysis failed: {e}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="Internal server error during analysis")
+        raise HTTPException(
+            status_code=500, detail="Internal server error during analysis"
+        )
 
 
 @app.post("/analyze-file")
 async def analyze_resume_file(
-    resume_file: UploadFile = File(...), job_description: str = None
+    resume_file: UploadFile = File(...), job_description: str = Form(...)
 ):
-    """Analyze uploaded file against JD (text/plain supported here)."""
+    """Analyze uploaded file against JD (supports PDF, DOCX, TXT)."""
     if not job_description or len(job_description.strip()) < 10:
         raise HTTPException(
             status_code=400,
@@ -129,20 +128,88 @@ async def analyze_resume_file(
 
         if resume_file.content_type == "text/plain":
             resume_text = file_content.decode("utf-8")
+            logger.info(f"Extracted text from TXT: {len(resume_text)} chars")
+        elif resume_file.content_type == "application/pdf":
+            import PyPDF2
+            from io import BytesIO
+
+            logger.info(f"Processing PDF file: {resume_file.filename}")
+            try:
+                pdf_reader = PyPDF2.PdfReader(BytesIO(file_content))
+                resume_text = ""
+
+                logger.info(f"PDF has {len(pdf_reader.pages)} pages")
+
+                for i, page in enumerate(pdf_reader.pages):
+                    try:
+                        page_text = page.extract_text()
+                        if page_text:
+                            logger.info(
+                                f"Page {i + 1} extracted {len(page_text)} chars"
+                            )
+                            resume_text += page_text + "\n"
+                        else:
+                            logger.warning(f"Page {i + 1} returned empty text")
+                    except Exception as page_error:
+                        logger.error(f"Error extracting page {i + 1}: {page_error}")
+                        continue
+
+                # Clean up the text - remove extra whitespace
+                resume_text = " ".join(resume_text.split())
+                logger.info(f"Total extracted from PDF: {len(resume_text)} chars")
+
+                if len(resume_text) < 20:
+                    logger.error(
+                        f"PDF text extraction failed - only got: '{resume_text}'"
+                    )
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Failed to extract text from PDF. The PDF might be image-based or encrypted.",
+                    )
+
+            except PyPDF2.errors.PdfReadError as pdf_error:
+                logger.error(f"PDF read error: {pdf_error}")
+                raise HTTPException(
+                    status_code=400, detail=f"Failed to read PDF file: {str(pdf_error)}"
+                )
+
+        elif (
+            resume_file.content_type
+            == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ):
+            import docx
+            from io import BytesIO
+
+            logger.info(f"Processing DOCX file: {resume_file.filename}")
+            doc = docx.Document(BytesIO(file_content))
+            resume_text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+            logger.info(f"Extracted text from DOCX: {len(resume_text)} chars")
         else:
             raise HTTPException(
                 status_code=400,
-                detail="PDF/DOCX parsing not implemented in this demo. Please use text files.",
+                detail="Unsupported file format",
             )
 
+        if len(resume_text.strip()) < 20:
+            logger.warning(f"Extracted text too short: {len(resume_text)} chars")
+            logger.warning(f"Text preview: {resume_text[:200]}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Could not extract meaningful text from the file. Only {len(resume_text)} characters extracted.",
+            )
+
+        logger.info(
+            f"Analyzing file resume ({len(resume_text)} chars) vs JD ({len(job_description)} chars)"
+        )
         result = enhanced_match_resume_to_jd(resume_text, job_description)
+        logger.info(f"File analysis complete - Score: {result['overall_score']:.1f}")
         return AnalysisResponse(**result)
 
     except UnicodeDecodeError:
         raise HTTPException(status_code=400, detail="Invalid text encoding")
     except Exception as e:
         logger.error(f"File analysis failed: {e}")
-        raise HTTPException(status_code=500, detail="File processing failed")
+        raise HTTPException(status_code=500, detail=f"File processing failed: {str(e)}")
 
 
 @app.get("/skills")
