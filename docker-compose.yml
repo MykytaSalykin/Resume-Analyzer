@@ -16,14 +16,28 @@ services:
       retries: 6
     restart: unless-stopped
 
-  # Streamlit UI Service  
-  resume-ui:
+  # Streamlit UI Service (Legacy)
+  resume-ui-streamlit:
     build: .
     command: streamlit run ui/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
     environment:
       - PYTHONPATH=/app
     ports:
       - "8501:8501"
+    depends_on:
+      resume-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # React Frontend (Modern UI)
+  resume-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
     depends_on:
       resume-api:
         condition: service_healthy
